@@ -1,0 +1,45 @@
+services:
+  mysql_db:
+    container_name: mysql_db
+    image: mysql:8.0.32
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_USERNAME: root
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db_mysql
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    volumes:
+      - volume_mysql_db_mysql:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=password --execute \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 20s
+      retries: 10
+  postgres_db:
+    container_name: postgres_db
+    image: postgres:14-alpine3.18
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db_postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - volume_postgres_db_postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: "pg_isready -U postgres | grep 'accepting connections' || exit 1"
+      interval: 2s
+      timeout: 20s
+      retries: 10
+volumes:
+  volume_mysql_db_mysql:
+    external: false
+  volume_postgres_db_postgres:
+    external: false
